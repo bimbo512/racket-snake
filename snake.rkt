@@ -105,8 +105,8 @@
    (* CELDA (- N-FILAS (+ celda-y 0.5)))
    img2))
 
-;Contrato:snake+img: snake image -> image. Donde snake es una estructura
-;Propósito: Dibujar el snake en el canvas
+;Contrato:snake+img: snake image -> image.
+;Propósito: Funcion que dibuja el snake en el canvas. Donde snake es una estructura 
 ;Ejemplo:
 (define (snake+img snake img)
   (segs+img (snake-segs snake) img))
@@ -124,11 +124,12 @@
       (segs+img (rest loseg) img))]))
   
 ;Contrato:food+img: fruta image -> image
-;Propósito: Dibujar las fruta en el canvas
+;Propósito: Funcion que dibuja las fruta en el canvas. Donde fruta es una estructura
 ;Ejemplo: 
 (define (food+img fruta img)
   (imagen-en-celda APPLE (posn-x fruta) (posn-y fruta) img))
-
+;Contrato: bono+img: world iamgen->image
+;Proposito: 
 (define (bono+img w img)
   (imagen-en-celda BONO (posn-x (loc-bonus w)) (posn-y (loc-bonus w)) img))
 
@@ -139,20 +140,23 @@
 (define (name+img)
   (text (text-contents nombre) 20 "cyan"))
 
-;;pinta el score en el mundo
+;Contrato: fig-score: list world->string
+;Proposito: Funcion que pinta el score en el mundo
 (define (fig-score x w)
   (cond
     [(comiendo-bonus? w) (text (string-append "Score: " (number->string (+ (calc-score x 0) 2))) 20 "white")]
     [else
      (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white")]))
-;calcula el puntaje de acuerdo al numero de segmentos -1
+;Contrato: calc-score: list number->number
+;Proposito: Funcion que calcula el puntaje que lleva el jugador durante el juego
 (define (calc-score serpiente n)
   (cond
     [(empty? serpiente) n]
     [(<= (length serpiente) 1) n]
     [else (calc-score (rest serpiente) (+ n 1))]))
   
-;dibuja la última escena
+;Contrato: last-scene: world->image
+;Proposito: Funcion que dibuja la última escena del juego, osea en el momento en el que el jugador pierde.
 (define (last-scene w)
   (place-image
    (above
@@ -168,9 +172,8 @@
   (make-snake (cons (new-seg (first (snake-segs snake)) (snake-dir snake))
                     (snake-segs snake))
               (snake-dir snake)))
-
 ;Contrato: new-seg: snake-dir -> snake-seg
-;Proposito: Funcion que crea un nuevo segmento
+;Proposito: Funcion que crea un nuevo segmento en la serpiente.
 ;Ejemplo:
 (define (new-seg seg dir)
   (cond
@@ -203,6 +206,8 @@
 (define (comiendo? w)
   (posn=? (first (snake-segs (world-snake w))) (world-fruta w)))
 
+;Contrato: comiendo-bonus?: world -> boolean
+;Proposito: Funcion que determina si la cabeza de la serpiente colisiona con la fruta bono
 (define (comiendo-bonus? w)
   (posn=? (first (snake-segs (world-snake w))) (loc-bonus w)))
 
@@ -241,8 +246,8 @@
        (>= (posn-y p) 0) (< (posn-y p) N-FILAS)))
        
   
-;;evalúa si el jugador ha perdido.
-;;es decir, si choca con un muro o si choca consigo mismo
+;Contrato: end?: world->boolean
+;Proposito: Funcion que evalúa si el jugador ha perdido. Es decir, si el snake choca con un muro choca consigo mismo
 (define (end? w)
   (cond
     [(eqv? (save-game w) "puntajes.txt") true]
@@ -250,20 +255,22 @@
 ;(or (world-collision? w) (self-collision? w)))
        
 ;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
-;el bonus expiró?
+;Contrato: zerobonus?: world->
+;Proposito: Funcion que determina si el bonus expiró
 (define (zerobonus? w)
   (cond
     [(zero? (tiempo-bonus w)) true]
     [(<= (tiempo-bonus w) 4) 4]
     [else false]
     ))
-;reaparece el bonus
+;Contrato: resetbonus: world->boolean
+;Proposito: Funcion que reaparece el bonus
 (define (resetbonus w)
   (<= (tiempo-bonus w) (* EXP -1)))
 
 
 ;Contrato: next-world: world -> world. donde w es una estructura.
-;Propósito: Funcion que calcula el nuevo estado del mundo cada tick del reloj
+;Propósito: Funcion que calcula el nuevo estado del mundo en cada tick del reloj
 ;Ejemplo: 
 (define (next-world w)
   (cond
@@ -293,7 +300,8 @@
      (make-world (snake-slither (world-snake w))
                  (world-fruta w) (world-bonus w) (world-score w))]))
 
-;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev ;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
+;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev 
+;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
 ;Ejemplo:
 (define (tecla w kev)
   (cond
@@ -315,7 +323,7 @@
 ;:::::::::::::::::::::::FUNCIONES DE PUNTAJE Y GUARDAR PUNTAJE:::::::::::::::::::::::::::::::::
 
 ;Contrato: save-game: w -> .txt
-;Propósito: Guardar el puntaje del jugador
+;Propósito: Funcion que guarda el puntaje del jugador
 ;Ejemplo
 ;(save-game WORLD-0) Debe retornar un .txt en el directorio del juego con el puntaje
 (define (crear-txt w)
@@ -342,6 +350,7 @@
     [else w]))
 
 ;::::::::::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
+
 (define header (make-message "
       Culebrita - FDP
 
@@ -373,7 +382,9 @@ Consigue el mayor número de puntos."))
        (list (make-button "Instrucciones" w3))
        (list (make-button "Salir" (lambda (e) (hide-window w)))))))
   
-;;BIG-BANG  
+;;BIG-BANG
+;Contrato: main: world->world
+;Proposito: Funcion que inicia el juego
 (define (main w)
   (big-bang WORLD0
     [to-draw render]
