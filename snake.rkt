@@ -1,5 +1,13 @@
 #lang racket
 ;;Snake
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;;PROYECTO FINAL FUNDAMENTOS DE PROGRAMACIÓN
+;DOCENTE: Andres Mauricio Castillo 
+;INTERGRANTES
+;--Alvarado Juan Felipe
+;--Cortés David Santiago
+;--Hurtado Jose Alejandro
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 (require 2htdp/universe)
 (require 2htdp/image)
 (require 2htdp/batch-io)
@@ -46,15 +54,19 @@
 (define APPLE (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "green"))
 (define BONO (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "yellow"))
 
+;Contrato: tiempo-bonus: world->number
+;Proposito: Funcion que dice el tiempo del bono
 (define (tiempo-bonus w)
   (bonus-t (world-bonus w)))
-
+;Contrato: loc-bonus: world->punto2d
+;Proposito: Funcion que dice donde se encuentra el punto del bono
 (define (loc-bonus w)
   (bonus-posn (world-bonus w)))
-
+;Contrato: puntaje: world->number
+;Proposito: Funcion que dice el puntaje del jugador
 (define (puntaje w)
   (calc-score (snake-segs (world-snake w)) 0))
-
+;Constantes del mundo
 (define WORLD0
   (make-world (make-snake (list (make-posn 2 6) ) "right")
               (make-posn 1 15) (make-bonus (make-posn 1 10) EXP)(make-score 0)))
@@ -112,13 +124,13 @@
 
 ;Contrato:snake+img: snake image -> image. Donde snake es una estructura
 ;Propósito: Dibujar el snake en el canvas
-;Ejemplo:
+;Ejemplo: (snake+img snake1 FONDO) debe retornar la imagen del fondo con el snake pintado en ella
 (define (snake+img snake img)
   (segs+img (snake-segs snake) img))
 
 ;Contrato: segs+img: list image -> image
 ;Proposito: Funcion que dibuja todos los segmentos
-;Ejemplo
+;Ejemplo:(segs+img segs2 FONDO) debe retornar la imagen del fondo con 2 segmentos del snake pintados en él
 (define (segs+img loseg img)
   (cond
     [(empty? loseg) img]
@@ -129,35 +141,43 @@
       (segs+img (rest loseg) img))]))
   
 ;Contrato:food+img: fruta image -> image
-;Propósito: Dibujar las fruta en el canvas
-;Ejemplo: 
+;Propósito: Funcion que dibuja la fruta en el canvas
+;Ejemplo: (food+img food1 FONDO) Debe retornar la imagen del fondo con la fruta pintada en él
 (define (food+img fruta img)
   (imagen-en-celda APPLE (posn-x fruta) (posn-y fruta) img))
-
+;Contrato:food+img: bonus image -> image
+;Propósito: Funcion que dibuja el bono en el canvas
+;Ejemplo: (food+img WORLD0 FONDO) Debe retornar la imagen del fondo con el bono pintado en él
 (define (bono+img w img)
   (imagen-en-celda BONO (posn-x (loc-bonus w)) (posn-y (loc-bonus w)) img))
 
-;Contrato: score+img: number --> image
+;Contrato: score+img: number -> image
 ;Propósito: Hacer que el puntaje aparezca durante el juego y se actualice
 ;(define (score+img score img)
  ; (imagen-en-celda (fig-score (snake-segs score)) 510 15 img))
 (define (name+img)
   (text (text-contents nombre) 20 "cyan"))
 
-;;pinta el score en el mundo
+;Contrato: fig-score: list world->string
+;Proposito: Funcion que pinta el score en el mundo
+;Ejemplo: (fig-score segs1 WORLD0) debe retornar .
 (define (fig-score x w)
   (cond
     [(comiendo-bonus? w) (text (string-append "Score: " (number->string (+ (calc-score x 0) 2))) 20 "white")]
     [else
      (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white")]))
-;calcula el puntaje de acuerdo al numero de segmentos -1
+
+;Contrato: calc-score: list number->number
+;Proposito: Funcion que calcula el puntaje de acuerdo al numero de segmentos -1
+;Ejemplo: (calc-score segs1 2) debe retornar 2
 (define (calc-score serpiente n)
   (cond
     [(empty? serpiente) n]
     [(<= (length serpiente) 1) n]
     [else (calc-score (rest serpiente) (+ n 1))]))
   
-;dibuja la última escena
+;Contrato: last-scene: world->image
+;Proposito: Funcion que dibuja la última escena
 (define (last-scene w)
   (ripsnek w)
   (place-image
@@ -168,8 +188,7 @@
    (render w)))
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
 ;Contrato: snake-grow: snake -> snake. Donde snake es una estructura
-;Proposito: añade un nuevo segmento a la serpiente en la "cabecera" a una direccion dada
-;Ejemplo: 
+;Proposito: Funcion que añade un nuevo segmento a la serpiente en la "cabecera" a una direccion dada
 (define (snake-grow snake)
   (make-snake (cons (new-seg (first (snake-segs snake)) (snake-dir snake))
                     (snake-segs snake))
@@ -177,7 +196,6 @@
 
 ;Contrato: new-seg: snake-dir -> snake-seg
 ;Proposito: Funcion que crea un nuevo segmento
-;Ejemplo:
 (define (new-seg seg dir)
   (cond
     [(string=? "up" dir) (make-posn (posn-x seg) (+ (posn-y seg) 1))]
@@ -196,7 +214,6 @@
 
 ;Contrato: nuke-last: snake-> snake
 ;Proposito: Funcion que retorna una snake sin su ultimo segmento
-;Ejemplo:
 (define (nuke-last loseg)
   (cond
     [(empty? (rest loseg)) empty]
@@ -205,28 +222,27 @@
 ;_____________________________________COLISIONES____________________________________
 ;Contrato: comiendo?: world -> boolean. Donde w es una estructura
 ;Proposito: Funcion que determina si la cabecera de la serpiente colisiona con una fruta
-;Ejemplo
+;Ejemplo: (comiendo? WORLD0) debe retornar #f
 (define (comiendo? w)
   (posn=? (first (snake-segs (world-snake w))) (world-fruta w)))
-
+;Contrato: comiendo-bonus?: world -> boolean. Donde w es una estructura
+;Proposito: Funcion que determina si la cabecera de la serpiente colisiona con una fruta
+;Ejemplo: (comiendo-bonus? WORLD0) debe retornar #f
 (define (comiendo-bonus? w)
   (posn=? (first (snake-segs (world-snake w))) (loc-bonus w)))
 
 ;Contrato: posn=?: posn posn -> boolean. Donde a y b son puntos 2d
 ;Proposito: Funcion que determina si dos puntos estan sobrelapados
-;Ejemplo
 (define (posn=? a b)
   (and (= (posn-x a ) (posn-x b)) (= (posn-y a) (posn-y b))))
 
 ;Contrato: self-colission?: world -> boolean. Donde w es una estructura
 ;Proposito: Funcion que determina si la serpiente se esta chocando con sigo misma
-;Ejemplo:
 (define (self-collision? w)
   (seg-collision? (first (snake-segs (world-snake w))) (rest (snake-segs (world-snake w)))))
 
 ;Contrato: seg-colission?: segs -> boolean
 ;Proposito: Funcion que determina si un segmento dado esta en el mismo lugar que algún otro en la lista
-;Ejemplo:
 (define (seg-collision? seg los)
   (cond
     [(empty? los) false]
@@ -235,22 +251,22 @@
 
 ;Contrato: world-collision?: world -> boolean. donde w es una estructura
 ;Proposito: Funcion que determina si la serpiente esta chocando con uno de los bordes del mundo
-;Ejemplo:
 (define (world-collision? w)
   (not (in-bounds? (first (snake-segs (world-snake w))))))
 
 ;Contrato: in-bounds?: p -> boolean. Donde p es un punto 2d
 ;Proposito: Funcion que determina si un determinado punto esta en el borde del canvas
-;Ejemplo:
 (define (in-bounds? p)
   (and (>= (posn-x p) 0) (< (posn-x p) N-COLUMNAS)
        (>= (posn-y p) 0) (< (posn-y p) N-FILAS)))
- ;...      
+;Contrato: muerto?: world->boolean
+;Porposito: Funcion que determina si la serpiente ha muerto
 (define (muerto? w)
   (or (world-collision? w) (self-collision? w)))
 
-;;evalúa si el jugador ha perdido.
-;;es decir, si choca con un muro o si choca consigo mismo
+;Contrato: end?: world->boolean
+;Porposito: Funcion que evalúa si el jugador ha perdido. es decir, si choca con un muro o si choca consigo mismo
+;Ejemplo: (end? WORLD0) debe retornar #f
 (define (end? w)
   (if (muerto? w)
   (cond
@@ -258,20 +274,23 @@
     [else false]) false))
        
 ;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
-;el bonus expiró?
+;Contrato: zerobonus?: world->boolean-number
+;Proposito: Funcion que determina si el bonus expiró
+;Ejemplo: (zerobonus? WORLD0) debe retornar 4
 (define (zerobonus? w)
   (cond
     [(zero? (tiempo-bonus w)) true]
     [(<= (tiempo-bonus w) 4) 4]
     [else false]
     ))
-;reaparece el bonus
+;Contrato: resetbonus: world->boolean
+;Proposito: Funcion que reaparece el bonus
 (define (resetbonus w)
   (<= (tiempo-bonus w) (* EXP -1)))
 
 ;Contrato: next-world: world -> world. donde w es una estructura.
 ;Propósito: Funcion que calcula el nuevo estado del mundo cada tick del reloj
-;Ejemplo: 
+;Ejemplo: (next-world WORLD0) debe retornar (world (snake (list (posn 3 6)) "right") (posn 1 15) (bonus (posn 1 10) 4) (score 0))
 (define (next-world w)
   (cond
     [(world-collision? w) WORLD0]
@@ -300,8 +319,9 @@
      (make-world (snake-slither (world-snake w))
                  (world-fruta w) (world-bonus w) (world-score w))]))
 
-;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev ;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
-;Ejemplo:
+;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev
+;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
+;Ejemplo:(tecla WORLD0 "up") debe retornar (world (snake (list (posn 2 6)) "up") (posn 1 15) (bonus (posn 1 10) 4) (score 0))
 (define (tecla w kev)
   (cond
     [(and (key=? kev "up") (string=? (snake-dir (world-snake w)) "down"))
@@ -367,8 +387,7 @@ Consigue el mayor número de puntos."))
 (define (w2 e)
   (create-window
   (list
-   (list (make-message (string-append "Último puntaje
-"
+   (list (make-message (string-append "Último puntaje"
                                       texto2)))))#t)
 
 (define (w3 e)
@@ -392,4 +411,4 @@ Consigue el mayor número de puntos."))
     [on-tick next-world TICK]
     [on-key tecla]
     [stop-when end? last-scene]
-    [name "SNAKE ADVENTURE"]) #t)
+[name "SNAKE ADVENTURE"]) #t)
